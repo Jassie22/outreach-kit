@@ -40,12 +40,12 @@ from pathlib import Path
 
 # Where the master contact list lives. Override with OUTREACH_DATA_DIR
 # if you keep contacts outside the repo (a private notes folder, say).
-VAULT = Path(os.environ.get("OUTREACH_DATA_DIR",
+DATA_DIR = Path(os.environ.get("OUTREACH_DATA_DIR",
                             Path(__file__).resolve().parent / "data"))
-MASTER = VAULT / "recruiter-outreach-list.csv"
-PARKED = VAULT / "recruiter-outreach-parked.csv"
-REPORT = VAULT / "recruiter-outreach-dedupe-report.md"
-BLOCKLIST = VAULT / "do-not-contact.txt"
+MASTER = DATA_DIR / "recruiter-outreach-list.csv"
+PARKED = DATA_DIR / "recruiter-outreach-parked.csv"
+REPORT = DATA_DIR / "recruiter-outreach-dedupe-report.md"
+BLOCKLIST = DATA_DIR / "do-not-contact.txt"
 
 BATCH_GLOB = "batch-*.csv"
 
@@ -209,8 +209,8 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true",
                     help="report only, write nothing")
-    ap.add_argument("--batch-dir", type=Path, default=VAULT,
-                    help=f"where the {BATCH_GLOB} files live (default {VAULT})")
+    ap.add_argument("--batch-dir", type=Path, default=DATA_DIR,
+                    help=f"where the {BATCH_GLOB} files live (default {DATA_DIR})")
     args = ap.parse_args()
 
     master = load(MASTER)

@@ -25,10 +25,10 @@ from pathlib import Path
 
 # Where the master contact list lives. Override with OUTREACH_DATA_DIR
 # if you keep contacts outside the repo (a private notes folder, say).
-VAULT = Path(os.environ.get("OUTREACH_DATA_DIR",
+DATA_DIR = Path(os.environ.get("OUTREACH_DATA_DIR",
                             Path(__file__).resolve().parent / "data"))
-MASTER = VAULT / "recruiter-outreach-list.csv"
-OUT = VAULT / "linkedin-outreach.csv"
+MASTER = DATA_DIR / "recruiter-outreach-list.csv"
+OUT = DATA_DIR / "linkedin-outreach.csv"
 
 PROFILE = re.compile(r"(https?://)?([\w.]*\.)?linkedin\.com/in/[\w\-%À-ÿ]+", re.I)
 STALE = re.compile(r"\b(has left|have left|no longer at|headline now reads|"

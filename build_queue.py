@@ -31,9 +31,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 # Where the master contact list lives. Override with OUTREACH_DATA_DIR
 # if you keep contacts outside the repo (a private notes folder, say).
-VAULT = Path(os.environ.get("OUTREACH_DATA_DIR",
+DATA_DIR = Path(os.environ.get("OUTREACH_DATA_DIR",
                             Path(__file__).resolve().parent / "data"))
-MASTER = VAULT / "recruiter-outreach-list.csv"
+MASTER = DATA_DIR / "recruiter-outreach-list.csv"
 SENT_LOG = HERE / "sent.log"
 QUEUE = HERE / "recipients.csv"
 TEMPLATES = HERE / "templates"
