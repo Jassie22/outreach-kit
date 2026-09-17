@@ -219,9 +219,9 @@ def wants_attachment(row: dict) -> bool:
 
     Cold-email convention says link rather than attach outside the agency
     lane, on the grounds that an unsolicited attachment reads as "review me".
-    Her call, 2026-09-16, overrides that for all lanes: send the CV. A founder
-    who has to click through to GitHub to find out whether you are worth
-    replying to mostly just does not click.
+    This overrides that and attaches in every lane, because a founder who has
+    to click through to a portfolio to decide whether you are worth a reply
+    mostly just does not click. Change it if your reply rates disagree.
 
     An explicit `attach` column can still switch it off for a single row.
     """
@@ -354,7 +354,7 @@ def parse_args(argv=None):
     p.add_argument("--no-attach", action="store_true",
                    help="proceed with no attachment (required if attachments/ is empty)")
     p.add_argument("--i-know-what-im-doing", dest="override", action="store_true",
-                   help="required alongside --send for batches over 50")
+                   help="required alongside --send for batches over 500")
     return p.parse_args(argv)
 
 

@@ -153,6 +153,52 @@ One trap: only keep an address whose local part contains the person's own name.
 A page-wide grep for emails picks up the office switchboard address and
 attributes it to whoever happens to be on that page.
 
+## Flags
+
+```
+./send.py --help
+```
+
+| Flag | Default | What it does |
+|---|---|---|
+| `--dry-run` | **on** | Render everything and print it, including the attachment name and size. Sends nothing. This is what runs if you pass nothing at all. |
+| `--send` | off | Actually send. Has to be explicit; there is no config setting that turns it on for you. |
+| `--limit N` | 25 | Cap the batch. The rest are reported as skipped, not silently dropped. |
+| `--throttle MIN MAX` | `240 900` | Random gap in seconds between messages. The default spreads 30 emails over roughly four hours. `--throttle 5 15` for a quick test. |
+| `--template NAME` | `a1` | Fallback template for rows whose `template` column is empty. A row that names its own always wins. |
+| `--only EMAIL` | — | Send to exactly one address. For testing a single message end to end. Overrides the `status` gate but **never** the `sent.log` dedupe. |
+| `--no-attach` | off | Send with no attachment. Required if `attachments/` is empty, so a missing CV is always a deliberate choice. |
+| `--i-know-what-im-doing` | off | Required alongside `--send` for batches over 500. |
+
+### Testing before you send
+
+Dry run is the default because reading the exact bytes is the only way to catch
+a bad opener, and it costs nothing:
+
+```
+./send.py                                  # whole queue, rendered, nothing sent
+./send.py --dry-run --limit 5              # just the first five
+./send.py --dry-run | less                 # read them properly
+./check_variation.py                       # are two same-lane templates too alike?
+```
+
+Then one real message to yourself before anything goes to a real person:
+
+```
+./send.py --send --only you@gmail.com --throttle 5 15
+```
+
+That proves auth, the From name, the attachment and the rendering in one go.
+Check how it looks on a phone. Delete the row from `sent.log` afterwards if you
+want to repeat it, since the dedupe will otherwise refuse.
+
+Then a small real batch, then the rest:
+
+```
+./send.py --send --limit 2
+./send.py --send --limit 30
+```
+
 ## Guards
 
 Everything here exists because the failure it prevents is worse than no email.
@@ -171,19 +217,145 @@ Everything here exists because the failure it prevents is worse than no email.
 
 ## Scheduling
 
-`systemd --user` timer, weekday mornings:
+Sending the same number of messages every weekday morning beats sending 200 in
+one afternoon, for deliverability and for your own sanity when replies start
+arriving. Pick a daily cap you can actually keep up with.
+
+**On time of day:** mid-morning beats first thing. Recipients are through the
+overnight pile by then and the batch still lands inside the working day.
+Weekdays only: a cold CV arriving on a Sunday reads as automated, because it is.
+
+### Linux — systemd user timer
+
+```ini
+# ~/.config/systemd/user/outreach-send.service
+[Unit]
+Description=Send the day's outreach tranche
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/outreach-kit
+ExecStart=/usr/bin/python3 %h/outreach-kit/send.py --send --limit 30
+TimeoutStartSec=6h
+Nice=10
+```
 
 ```ini
 # ~/.config/systemd/user/outreach-send.timer
+[Unit]
+Description=Daily outreach send, weekday mornings
+
 [Timer]
 OnCalendar=Tue,Wed,Thu,Fri *-*-* 09:15:00
+# Laptop asleep at 09:15? Run once on wake instead of skipping the day.
 Persistent=true
 RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target
 ```
 
-Mid-morning beats 08:00, because recipients are through the overnight pile by
-then and the batch still lands inside the working day. Weekends are skipped: a
-cold CV arriving on a Sunday reads as automated, because it is.
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now outreach-send.timer
+systemctl --user list-timers outreach-send.timer     # confirm the next run
+journalctl --user -u outreach-send.service -n 50     # read the last run
+```
+
+`Persistent=true` matters on a laptop: without it, a closed lid at 09:15 means
+that day simply does not happen.
+
+**Plain cron** works too, but it will not catch up a missed run and it starts
+with a near-empty environment, so use absolute paths:
+
+```cron
+15 9 * * 2-5 cd $HOME/outreach-kit && /usr/bin/python3 send.py --send --limit 30 >> send.log 2>&1
+```
+
+### macOS — launchd
+
+`cron` still works on macOS but `launchd` is the supported route and survives
+sleep properly.
+
+```xml
+<!-- ~/Library/LaunchAgents/com.user.outreach-send.plist -->
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.user.outreach-send</string>
+  <key>WorkingDirectory</key><string>/Users/YOU/outreach-kit</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>/Users/YOU/outreach-kit/send.py</string>
+    <string>--send</string>
+    <string>--limit</string><string>30</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>15</integer></dict>
+  </array>
+  <key>StandardOutPath</key><string>/tmp/outreach-send.log</string>
+  <key>StandardErrorPath</key><string>/tmp/outreach-send.err</string>
+</dict>
+</plist>
+```
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.user.outreach-send.plist
+launchctl list | grep outreach
+```
+
+### Windows — Task Scheduler
+
+```powershell
+$action  = New-ScheduledTaskAction -Execute "python" `
+             -Argument "send.py --send --limit 30" `
+             -WorkingDirectory "$env:USERPROFILE\outreach-kit"
+$trigger = New-ScheduledTaskTrigger -Weekly `
+             -DaysOfWeek Tuesday,Wednesday,Thursday,Friday -At 9:15am
+$settings = New-ScheduledTaskSettingsSet `
+             -StartWhenAvailable `
+             -RandomDelay (New-TimeSpan -Minutes 10) `
+             -ExecutionTimeLimit (New-TimeSpan -Hours 6)
+
+Register-ScheduledTask -TaskName "Outreach send" `
+  -Action $action -Trigger $trigger -Settings $settings
+```
+
+`-StartWhenAvailable` is the `Persistent=true` equivalent: it runs a missed job
+once the machine is back. Check it with `Get-ScheduledTaskInfo "Outreach send"`.
+
+On WSL, use the Linux instructions instead, but note that a WSL instance only
+runs while it is open, so a systemd timer inside WSL will miss any slot when
+the distro is shut down.
+
+### Can you run this from Claude Code on the web?
+
+**No, and it would not help if you could.** Claude Code on the web runs in an
+isolated cloud sandbox that is torn down after the session, with no outbound
+SMTP and no access to your machine. It also has no way to hold your app
+password, which is exactly the sort of credential that should never leave your
+own disk.
+
+Claude Code's own `/cron` scheduling, where available, drives a Claude session
+rather than a shell on your laptop, so it hits the same wall: something has to
+be running on a machine with your `.env` and your CV on it.
+
+If you want this off your laptop, the answer is a cheap always-on box you
+control: a VPS, a Raspberry Pi, or a home server. Copy the repo, put `.env` and
+the CV on it, and use the systemd timer above. That is the only setup where the
+credential stays somewhere you own and the schedule runs whether your laptop is
+open or not.
+
+What Claude Code **is** for here is the drafting: writing the openers, checking
+tone against the skills, and sourcing contacts with subagents. Sending is a
+five-line SMTP loop that does not need a model at all, which is why it is a
+separate script you can cron.
 
 ## Licence
 

@@ -332,7 +332,7 @@ def build_rows(today: date) -> list:
 
     seen_ids = {m["stable_id"] for m in master}
     # sent.log / recipients.csv may reference an address the master list
-    # doesn't have (e.g. a test send to her own inbox) — still needs a row.
+    # doesn't have (e.g. a test send to your own inbox) — still needs a row.
     for email, entry in sent.items():
         sid = stable_id(email, "", "")
         if sid in seen_ids:
