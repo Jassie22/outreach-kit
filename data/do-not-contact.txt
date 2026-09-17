@@ -6,3 +6,7 @@
 # Your current or former employer
 # Example Employer Ltd
 # example-employer.com
+
+# A full email address blocks that one person only, leaving their colleagues
+# reachable. A bare domain blocks everyone there.
+# someone@example-agency.com

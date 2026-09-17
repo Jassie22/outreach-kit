@@ -161,20 +161,28 @@ def score(row: dict) -> tuple:
     return (has_email, verified, has_person, has_hook, has_role, completeness)
 
 
-def load_blocklist(path: Path) -> tuple[set, set]:
-    """Company names (normalised) and domains that must never be contacted."""
-    names, domains = set(), set()
+def load_blocklist(path: Path) -> tuple[set, set, set]:
+    """
+    Who must never be contacted: company names, domains, and individuals.
+
+    Individuals matter separately from domains. Falling out with one consultant
+    is not a reason to blocklist their whole agency, so a full email address in
+    this file blocks exactly that person and leaves their colleagues reachable.
+    """
+    names, domains, emails = set(), set(), set()
     if not path.exists():
-        return names, domains
+        return names, domains, emails
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.split("#", 1)[0].strip()
         if not line:
             continue
-        if "." in line and " " not in line:
+        if "@" in line:
+            emails.add(line.lower())
+        elif "." in line and " " not in line:
             domains.add(line.lower())
         else:
             names.add(norm_company(line))
-    return names, domains
+    return names, domains, emails
 
 
 def load(path: Path) -> list[dict]:
@@ -224,9 +232,10 @@ def main() -> int:
         print(f"batch    : {p.name} ({len(load(p))} rows)")
     print(f"incoming : {len(incoming)} rows\n")
 
-    block_names, block_domains = load_blocklist(BLOCKLIST)
-    if block_names or block_domains:
-        print(f"blocklist: {len(block_names)} name(s), {len(block_domains)} domain(s)\n")
+    block_names, block_domains, block_emails = load_blocklist(BLOCKLIST)
+    if block_names or block_domains or block_emails:
+        print(f"blocklist: {len(block_names)} name(s), {len(block_domains)} domain(s), "
+              f"{len(block_emails)} individual(s)\n")
 
     kept: list[dict] = []
     parked: list[dict] = []
@@ -239,7 +248,9 @@ def main() -> int:
     # and they must never collide with a real company on a shared domain.
     def consider(row: dict) -> None:
         dom = domain_of(row["email"]) or domain_of(row["website"])
-        if norm_company(row["company"]) in block_names or dom in block_domains:
+        if (norm_email(row["email"]) in block_emails
+                or norm_company(row["company"]) in block_names
+                or dom in block_domains):
             parked.append({**row, "_why": "on the do-not-contact list"})
             return
         if row["type"].strip().upper() == "CHANNEL":
