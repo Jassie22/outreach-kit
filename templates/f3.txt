@@ -1,0 +1,14 @@
+SUBJECT: Is {company} hiring engineers?
+
+{greeting},
+
+{opener}
+
+REPLACE THIS PARAGRAPH. Shorter than the other founder variants, because the
+opener on this one carries more weight.
+
+CV attached.
+
+{question}
+
+Your name

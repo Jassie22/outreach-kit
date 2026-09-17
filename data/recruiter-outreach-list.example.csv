@@ -1,0 +1,4 @@
+type,role,name,company,email,linkedin,specialism,location,website,profile,verified,notes
+Cold - agency,Agency Consultant,Alex Example,Example Agency,first.last@example-agency.com,,Backend and platform engineering,London,https://example-agency.com,https://example-agency.com/team/alex,VERIFIED https://example-agency.com/team/alex,Backend desk. Advertising a mid-level Go role.
+Cold - startup,Founder / CEO,Jo Example,Example Startup,hello@example-startup.com,https://linkedin.com/in/example,Developer tooling; Python and TypeScript,Bristol,https://example-startup.com,,SHARED INBOX published at https://example-startup.com/contact,"Raised a seed round last month: https://example.com/news"
+Cold - scaleup,Head of Talent,Sam Example,Example Scaleup,talent@example-scaleup.com,,Payments infrastructure,Manchester,https://example-scaleup.com,,VERIFIED https://example-scaleup.com/careers,"Hiring two Backend Engineers: https://example-scaleup.com/careers"

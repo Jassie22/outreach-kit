@@ -1,0 +1,15 @@
+SUBJECT: Engineering roles at {company}?
+
+{greeting},
+
+{opener}
+
+REPLACE THIS PARAGRAPH with your evidence block, pitched peer to peer rather
+than as CV-speak. At sub-50 headcount the founder usually is the hiring
+manager, so talk about what you built and how, not about your competencies.
+
+CV attached.
+
+{question}
+
+Your name

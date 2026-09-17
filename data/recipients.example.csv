@@ -1,0 +1,4 @@
+email,first_name,greeting,company,role,template,subject,opener,question,lane,status
+first.last@example-agency.com,Alex,Hi Alex,Example Agency,Agency Consultant,a1,,"I'm getting in touch because you're on the backend desk at Example Agency, and that's roughly where I sit.",,agency,
+hello@example-startup.com,,Hello,Example Startup,Founder / CEO,f1,,"I came across Example Startup and the decision to do X rather than Y stood out, because it sidesteps the problem everyone else is stuck on. I'm looking for my next engineering role and you came to mind.",Which part of the pipeline breaks most often?,founder,
+talent@example-scaleup.com,Sam,Hi Sam,Example Scaleup,Head of Talent,h1,,"I'm getting in touch because I saw Example Scaleup has two backend roles open, and the stack lines up closely with what I do.",,in-house,

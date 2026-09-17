@@ -1,0 +1,27 @@
+# Secrets
+.env
+
+# Your CV lives here but never goes in git. The folder is kept so a fresh
+# clone has somewhere to put it.
+attachments/*
+!attachments/.gitkeep
+
+# Real contact data: names, addresses and the line you wrote about each
+# person. Publishing this is a GDPR problem as well as an embarrassing one,
+# so only the .example.csv files are tracked.
+data/*
+!data/*.example.csv
+!data/do-not-contact.txt
+recipients.csv
+recipients-parked.csv
+
+# Append-only record of what was sent, to whom
+sent.log
+
+# Generated tracker output: contains everything above, in one spreadsheet
+tracker/outreach-tracker.xlsx
+tracker/update.log
+tracker/replies.tsv
+
+__pycache__/
+*.pyc

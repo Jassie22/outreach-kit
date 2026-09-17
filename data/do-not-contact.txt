@@ -1,0 +1,8 @@
+# Companies and people never to include in outreach.
+# One entry per line, matched against company name (normalised, so legal
+# suffixes and word order do not matter) and against email domain.
+# Lines starting with # are comments.
+
+# Your current or former employer
+# Example Employer Ltd
+# example-employer.com

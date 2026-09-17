@@ -1,0 +1,15 @@
+SUBJECT: Backend engineer, anything on your desk?
+
+{greeting},
+
+{opener} CV attached.
+
+REPLACE THIS PARAGRAPH with your evidence block. Strongest skill first, then
+the supporting ones, then two or three concrete things you have built. Prose,
+not bullets. Numbers rather than adjectives.
+
+Flexible on location. Around the market rate.
+
+Anything on your desk at the moment that might fit?
+
+Your name
