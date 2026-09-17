@@ -42,13 +42,28 @@ Other providers work if they speak SMTP + STARTTLS: set `SMTP_HOST` and
 
 ### 2. Your CV
 
+Drop it in `attachments/`. Any file there is attached to every message:
+
 ```
 cp ~/path/to/your-cv.pdf attachments/
 ```
 
-Whatever lands in `attachments/` is sent. The folder is gitignored. The sender
-refuses to run if it is empty, rather than quietly sending a CV-less email;
-pass `--no-attach` if that is genuinely what you want.
+The folder is gitignored, so your CV never ends up in a commit. The sender
+refuses to run if it is empty rather than quietly sending a CV-less email; pass
+`--no-attach` if that is genuinely what you want.
+
+The file is read from disk at send time, which is the whole reason the attach
+step lives here and not in the model.
+
+### 2b. Edit the templates before you send anything
+
+`templates/` ships examples, not a voice. Every one contains `REPLACE THIS
+PARAGRAPH` where your evidence block goes, and signs off `Your name`.
+
+`send.py --send` refuses the batch if any of that survives into a rendered
+message, so a first run cannot email a recruiter a paragraph of instructions.
+Fix the templates and set `FROM_NAME` in `.env`, then it will let you through.
+`--dry-run` always works and is how you check.
 
 ### 3. Your contact list
 

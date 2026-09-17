@@ -228,6 +228,27 @@ def wants_attachment(row: dict) -> bool:
     return (row.get("attach") or "").strip().lower() not in {"no", "n", "false", "0"}
 
 
+
+# Text shipped in the example templates and .env.example. If any of it survives
+# into a rendered message, the sender has not been set up yet and the message
+# would go out signed "Your name" with a paragraph of instructions in it.
+SETUP_PLACEHOLDERS = (
+    "REPLACE THIS PARAGRAPH",
+    "Your name",
+    "Your Name",
+    "you@gmail.com",
+    "Backend engineer",          # the stock role in the example templates
+    "Example Agency",
+    "Example Startup",
+    "Example Scaleup",
+)
+
+
+def find_placeholders(text: str) -> list:
+    """Shipped example text that should have been replaced before sending."""
+    return [ph for ph in SETUP_PLACEHOLDERS if ph in text]
+
+
 def collect_attachments() -> list:
     """
     Every regular file in attachments/, read as bytes off the disk.
@@ -441,6 +462,24 @@ def main(argv=None) -> int:
             + "\n  ".join(render_errors)
             + "\n\nFill in the missing columns in recipients.csv and re-run."
         )
+
+    # Refuse the whole batch if the templates or .env still carry shipped
+    # example text. Sending "REPLACE THIS PARAGRAPH" to a real recruiter is
+    # not recoverable, and it is the most likely first-run mistake.
+    if sending:
+        unset = []
+        for rownum, row, body in prepared:
+            hits = find_placeholders(body) + find_placeholders(FROM_NAME)
+            if hits:
+                unset.append(f"row {rownum} ({row.get('email', '?')}): {', '.join(sorted(set(hits)))}")
+        if unset:
+            die(
+                "the templates or .env still contain the shipped example text:\n  "
+                + "\n  ".join(unset[:8])
+                + (f"\n  ... and {len(unset) - 8} more" if len(unset) > 8 else "")
+                + "\n\nEdit templates/ to say what you actually do, and set FROM_NAME\n"
+                  "in .env. Run with --dry-run to check before sending."
+            )
 
     over_limit = len(prepared) - args.limit
     if over_limit > 0:
